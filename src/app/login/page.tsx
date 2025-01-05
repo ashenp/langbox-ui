@@ -42,8 +42,10 @@ export default function LoginPage() {
     })
       .then(response => response.json())
       .then(data => {
-        console.log('Success:', data);
-        const jwtToken = data.jwtToken;
+        const jwtToken = data.data;
+        console.log('token:', data);
+        document.cookie = `token=${jwtToken}; path=/;`;
+        window.location.href = '/welcome';
       })
       .catch(error => {
         console.error('Error:', error);
