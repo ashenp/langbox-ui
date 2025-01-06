@@ -3,8 +3,46 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Bell, Calendar, CreditCard, Download, Settings, Users } from 'lucide-react'
+import { useEffect, useState } from "react"
+
+interface UserProfile {
+    name: string;
+    avatar?: string;
+    lastLogin?: string;
+    memberLevel?: string;
+}
+
 
 export default function WelcomePage() {
+    const [profile, setProfile] = useState<UserProfile | null>(null)
+
+    useEffect(() => {
+        let token;
+        const checkToken = () => {
+            token = document.cookie.split('; ').find(row => row.startsWith('token='));
+            if (!token) {
+                window.location.href = '/login';
+            }
+        }
+        checkToken();
+        const fetchProfile = async () => {
+            const backendDomain = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
+            try {
+                const res = await fetch(`${backendDomain}/user/profile`)
+                if (res.ok) {
+                    const data = await res.json()
+                    setProfile(data)
+                }
+            } catch (error) {
+                console.error('Failed to fetch profile:', error)
+            }
+        }
+    }, [])
+
+    if (!profile) {
+        return <div>Get Profile Error</div>
+    }
+
     return (
         <div className="min-h-screen bg-background p-6 space-y-8">
             {/* 欢迎区域 */}
