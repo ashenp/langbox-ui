@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -7,9 +9,7 @@ import { useEffect, useState } from "react"
 
 interface UserProfile {
     name: string;
-    avatar?: string;
-    lastLogin?: string;
-    memberLevel?: string;
+    thumbnail: string;
 }
 
 
@@ -17,9 +17,9 @@ export default function WelcomePage() {
     const [profile, setProfile] = useState<UserProfile | null>(null)
 
     useEffect(() => {
-        let token;
+        let token = '';
         const checkToken = () => {
-            token = document.cookie.split('; ').find(row => row.startsWith('token='));
+            token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1] || '';
             if (!token) {
                 window.location.href = '/login';
             }
@@ -28,20 +28,27 @@ export default function WelcomePage() {
         const fetchProfile = async () => {
             const backendDomain = process.env.NEXT_PUBLIC_BACKEND_DOMAIN;
             try {
-                const res = await fetch(`${backendDomain}/user/profile`)
+                const res = await fetch(`${backendDomain}/user/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
                 if (res.ok) {
-                    const data = await res.json()
-                    setProfile(data)
+                    const data = await res.json();
+                    setProfile(data.data)
                 }
             } catch (error) {
                 console.error('Failed to fetch profile:', error)
             }
         }
+        fetchProfile();
     }, [])
 
     if (!profile) {
         return <div>Get Profile Error</div>
     }
+
+    console.log('profile:', profile.thumbnail);
 
     return (
         <div className="min-h-screen bg-background p-6 space-y-8">
@@ -49,14 +56,17 @@ export default function WelcomePage() {
             <section className="space-y-4">
                 <div className="flex items-center justify-between">
                     <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tight">欢迎回来, 张三</h1>
+                        <h1 className="text-3xl font-bold tracking-tight">欢迎回来, {profile.name}</h1>
                         <p className="text-muted-foreground">
                             今天是个好日子，让我们开始工作吧！
                         </p>
                     </div>
                     <Avatar className="h-12 w-12">
-                        <AvatarImage src="/placeholder.svg" />
-                        <AvatarFallback>ZS</AvatarFallback>
+                        <AvatarImage
+                            src={profile.thumbnail}
+                            alt={profile.name}
+                            loading="eager"
+                        />
                     </Avatar>
                 </div>
                 <div className="flex flex-wrap gap-2">
